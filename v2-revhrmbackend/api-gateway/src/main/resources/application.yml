@@ -1,0 +1,95 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}"
+            allowedMethods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      discovery:
+        locator:
+          enabled: true
+          lowerCaseServiceId: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: employee-service
+          uri: lb://employee-service
+          predicates:
+            - Path=/api/employees/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: leave-service
+          uri: lb://leave-service
+          predicates:
+            - Path=/api/leaves/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: performance-service
+          uri: lb://performance-service
+          predicates:
+            - Path=/api/performance/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
+server:
+  port: ${SERVER_PORT:8000}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetchRegistry: true
+    registerWithEureka: true
+  instance:
+    preferIpAddress: true
+
+jwt:
+  secret: "${JWT_SECRET:RevWorkforce@SecretKey#2024$SuperSecure!ChangeInProduction}"
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    com.revworkforce: DEBUG

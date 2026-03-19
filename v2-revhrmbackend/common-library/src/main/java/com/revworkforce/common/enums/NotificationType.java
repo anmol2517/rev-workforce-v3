@@ -1,0 +1,13 @@
+package com.revworkforce.common.enums;
+
+public enum NotificationType {
+    LEAVE_APPLIED,
+    LEAVE_APPROVED,
+    LEAVE_REJECTED,
+    LEAVE_CANCELLED,
+    PERFORMANCE_REVIEW_SUBMITTED,
+    PERFORMANCE_FEEDBACK_PROVIDED,
+    ANNOUNCEMENT,
+    GOAL_UPDATED,
+    GENERAL
+}

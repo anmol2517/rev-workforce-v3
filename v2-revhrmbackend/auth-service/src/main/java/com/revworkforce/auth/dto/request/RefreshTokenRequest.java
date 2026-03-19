@@ -1,0 +1,14 @@
+package com.revworkforce.auth.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RefreshTokenRequest {
+
+    @NotBlank(message = "Refresh token is required")
+    private String refreshToken;
+}

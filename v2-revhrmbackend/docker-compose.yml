@@ -1,0 +1,267 @@
+version: '3.8'
+
+services:
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "${EUREKA_PORT:-8761}:8761"
+    environment:
+      - EUREKA_HOSTNAME=eureka-server
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"
+    environment:
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4200}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  mysql-auth:
+    image: mysql:8.0
+    container_name: mysql-auth
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_auth
+    volumes:
+      - mysql-auth-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-employee:
+    image: mysql:8.0
+    container_name: mysql-employee
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_employee
+    volumes:
+      - mysql-employee-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-leave:
+    image: mysql:8.0
+    container_name: mysql-leave
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_leave
+    volumes:
+      - mysql-leave-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-performance:
+    image: mysql:8.0
+    container_name: mysql-performance
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_performance
+    volumes:
+      - mysql-performance-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-admin:
+    image: mysql:8.0
+    container_name: mysql-admin
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_admin
+    volumes:
+      - mysql-admin-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-notification:
+    image: mysql:8.0
+    container_name: mysql-notification
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=revworkforce_notification
+    volumes:
+      - mysql-notification-data:/var/lib/mysql
+    networks:
+      - revworkforce-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "${AUTH_PORT:-8001}:8001"
+    environment:
+      - DB_HOST=mysql-auth
+      - DB_PORT=3306
+      - DB_AUTH_NAME=revworkforce_auth
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-auth:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  employee-service:
+    build: ./employee-service
+    container_name: employee-service
+    ports:
+      - "${EMPLOYEE_PORT:-8002}:8002"
+    environment:
+      - DB_HOST=mysql-employee
+      - DB_PORT=3306
+      - DB_EMPLOYEE_NAME=revworkforce_employee
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-employee:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  leave-service:
+    build: ./leave-service
+    container_name: leave-service
+    ports:
+      - "${LEAVE_PORT:-8003}:8003"
+    environment:
+      - DB_HOST=mysql-leave
+      - DB_PORT=3306
+      - DB_LEAVE_NAME=revworkforce_leave
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-leave:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  performance-service:
+    build: ./performance-service
+    container_name: performance-service
+    ports:
+      - "${PERFORMANCE_PORT:-8004}:8004"
+    environment:
+      - DB_HOST=mysql-performance
+      - DB_PORT=3306
+      - DB_PERFORMANCE_NAME=revworkforce_performance
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-performance:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  admin-service:
+    build: ./admin-service
+    container_name: admin-service
+    ports:
+      - "${ADMIN_PORT:-8005}:8005"
+    environment:
+      - DB_HOST=mysql-admin
+      - DB_PORT=3306
+      - DB_ADMIN_NAME=revworkforce_admin
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-admin:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "${NOTIFICATION_PORT:-8006}:8006"
+    environment:
+      - DB_HOST=mysql-notification
+      - DB_PORT=3306
+      - DB_NOTIFICATION_NAME=revworkforce_notification
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql-notification:
+        condition: service_healthy
+    networks:
+      - revworkforce-network
+
+networks:
+  revworkforce-network:
+    driver: bridge
+
+volumes:
+  mysql-auth-data:
+  mysql-employee-data:
+  mysql-leave-data:
+  mysql-performance-data:
+  mysql-admin-data:
+  mysql-notification-data:

@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: "jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NOTIFICATION_NAME:revworkforce_notification}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
+    username: "${DB_USERNAME:root}"
+    password: "${DB_PASSWORD:Scar2511@#}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+server:
+  port: ${SERVER_PORT:8006}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetchRegistry: true
+    registerWithEureka: true
+  instance:
+    preferIpAddress: true
+
+jwt:
+  secret: "${JWT_SECRET:RevWorkforce@SecretKey#2024$SuperSecure!ChangeInProduction}"
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    root: INFO
+    com.revworkforce: DEBUG

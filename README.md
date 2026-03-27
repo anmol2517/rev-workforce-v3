@@ -1,5 +1,3 @@
-# 🏢 RevWorkforce HRM
-
 <div align="center">
 
 ![RevWorkforce Banner](https://img.shields.io/badge/RevWorkforce-HRM%20System-1A3C5E?style=for-the-badge&logo=spring&logoColor=white)
